@@ -19,7 +19,7 @@
 
 
   async function addPicture(picture: any){
-    if(!selectedPictures.includes(picture)){
+    // if(!selectedPictures.includes(picture)){
       console.log(picture);
       selectedPictures = [...selectedPictures, picture];
       console.log("selectedPictures", selectedPictures);
@@ -35,7 +35,7 @@
       
       pictures = [...pictures, url];
     
-    }
+    // }
   }
 
   async function openFileDialog(){
@@ -58,13 +58,22 @@
 
   function deletePicture(pictureId: number){
     pictures = pictures.filter((url, i) => i !== pictureId);
+    selectedPictures = selectedPictures.filter((url, i) => i !== pictureId);
   }
 
-  $: console.log(pictures);
-  $: console.log(selectedPictures);
+  $: cmd = "-i " + selectedPictures.join(" ") + " -o " + selectedPictures.map((url: any) => {
+    console.log(url.split("."));
+    let file_extension = url.split(".").pop();
+    // Removing the file extension from the PATH
+    let filePath = url.slice(0, -(file_extension.length + 1));
+    return filePath + "_denoised." + file_extension;
+  } ).join(" ");
+  $: console.log(cmd);
+
+
 
   function handleDenoise(){
-    const result = invoke("run_denoiser");
+    const result = invoke("run_denoiser", {args: cmd});
     console.log(result);
   }
 </script>
