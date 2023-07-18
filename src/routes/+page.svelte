@@ -1,25 +1,22 @@
 <script lang="ts">
   import { open } from "@tauri-apps/api/dialog";
-  import { writeFile, writeBinaryFile, readBinaryFile, BaseDirectory, copyFile} from '@tauri-apps/api/fs';
+  import { readBinaryFile } from '@tauri-apps/api/fs';
   import { invoke  } from '@tauri-apps/api/tauri';
-  import { Command } from "@tauri-apps/api/shell";
- 
-
-
-  // $: inPictures = "./" + imageNames.join(" ./");
-  // $: outPicturs = inPictures.replace(/\.png/g, "_denoised.png");
-
-  // $: cmd = "-i " + inPictures + " -o " + outPicturs;
-  // $: console.log(cmd)
 
   
 
   let selectedPictures: any = []; 
   let pictures: any[] = []
+  let error = "";
+  let success = false;
 
-
+  /**
+   * Add Picture to be shown
+   * Read in Uint8Array from tauri and convert it into a blob
+   * Add it to the pictures array
+   * @param picture
+   */
   async function addPicture(picture: any){
-    // if(!selectedPictures.includes(picture)){
       console.log(picture);
       selectedPictures = [...selectedPictures, picture];
       console.log("selectedPictures", selectedPictures);
@@ -34,11 +31,14 @@
       const url = URL.createObjectURL(blob);
       
       pictures = [...pictures, url];
-    
-    // }
   }
 
+  /**
+   * Open File Dialog
+   */
   async function openFileDialog(){
+    success = false;
+    error = "";
     const selected = await open({
         multiple: true,
         filters: [{
@@ -56,11 +56,18 @@
     }
   }
 
+  /**
+   * Delete Picture from the pictures array
+   * @param pictureId 
+   */
   function deletePicture(pictureId: number){
     pictures = pictures.filter((url, i) => i !== pictureId);
     selectedPictures = selectedPictures.filter((url, i) => i !== pictureId);
   }
 
+  /**
+   * Create the command for the denoiser
+  */
   $: cmd = "-i " + selectedPictures.join(" ") + " -o " + selectedPictures.map((url: any) => {
     console.log(url.split("."));
     let file_extension = url.split(".").pop();
@@ -71,10 +78,24 @@
   $: console.log(cmd);
 
 
-
-  function handleDenoise(){
-    const result = invoke("run_denoiser", {args: cmd});
-    console.log(result);
+  /**
+   * Handle the denoising
+   * Invoke the tauri command
+   */
+  async function handleDenoise(){
+    invoke("run_denoiser", {args: cmd})
+    .then((e: any) => {
+      pictures = [];
+      selectedPictures = [];
+      success = true;
+    })
+    .catch((e: any) => {
+      pictures = [];
+      selectedPictures = [];
+      success = false;
+      error = e;
+    });
+   
   }
 </script>
 
@@ -99,3 +120,11 @@
       {/each}
     </div>
 </div>
+
+{#if success}
+  <h1 class="text-success font-bold flex justify-center">Success</h1>
+{/if}
+
+{#if error}
+  <h1 class="text-error font-bold flex justify-center">{error}</h1>
+{/if}

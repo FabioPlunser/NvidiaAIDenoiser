@@ -26,7 +26,8 @@ fn run_denoiser(args: String) -> Result<String, String> {
 
     let output = denoiser
         .output()
-        .map_err(|e| format!("Failed to execute denoiser: {:?}", e))?;
+        .expect("Failed to execute denoiser command");
+       
 
     if output.status.success() {
         // If the command executed successfully, return the stdout
