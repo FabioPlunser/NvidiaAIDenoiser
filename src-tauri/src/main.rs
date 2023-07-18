@@ -1,14 +1,13 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::path::Path;
 use std::process::Command;
 
 #[tauri::command]
-fn run_denoiser(args: String) -> Result<String, String> {
-    println!("Running denoiser with args: {}", args);
+fn run_denoiser(args: Vec<&str>) -> Result<String, String> {
+    println!("Running denoiser with args: {:?}", args);
     // Relative path to the file
-    let relative_path = "denoiser\\denoiser";
+    let relative_path = "denoiser/denoiser.exe";
 
     // Convert the relative path to an absolute path
     let absolute_path = std::env::current_dir()
@@ -20,9 +19,7 @@ fn run_denoiser(args: String) -> Result<String, String> {
 
     let mut denoiser = Command::new(path_str);
 
-    let arguments: Vec<&str> = args.split_whitespace().collect();
-
-    denoiser.args(arguments);
+    denoiser.args(args);
 
     let output = denoiser
         .output()
@@ -31,10 +28,12 @@ fn run_denoiser(args: String) -> Result<String, String> {
 
     if output.status.success() {
         // If the command executed successfully, return the stdout
+        println!("Error executing denoiser command: Stderr:{:?} Stdout:{:?}", &output.stderr, &output.stdout);
         Ok(String::from_utf8_lossy(&output.stdout).to_string())
     } else {
         // If the command failed, return an error message or handle the error as needed
-        Err(format!("Error executing denoiser command: {:?}", output.stderr))
+        println!("Error executing denoiser command: Stderr:{:?} Stdout:{:?}", &output.stderr, &output.stdout);
+        Err(format!("Error executing denoiser command: Stderr:{:?} Stdout:{:?}", &output.stderr, &output.stdout))
     }
 }
 

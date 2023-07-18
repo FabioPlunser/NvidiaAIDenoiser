@@ -11,6 +11,9 @@ const config = {
   },
 
   plugins: [forms, typography, daisyui],
+  daisyui: {
+    themes: ["light", "dark", "night"],
+  },
 };
 
 module.exports = config;
