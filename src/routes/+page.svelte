@@ -6,16 +6,19 @@
   let selectedPictures: any = [];
   let pictures: any[] = [];
   let error = "";
+  let msg = "";
   let success = false;
+  let loadingDenoiser = false;
 
   /**
+   * TODO Put this into a array and await the blob creation int the array to show the picture is loading
    * Add Picture to be shown
    * Read in Uint8Array from tauri and convert it into a blob
    * Add it to the pictures array
    * @param picture
    */
-  async function addPicture(picture: any) {
-    selectedPictures = [...selectedPictures, picture];
+  async function convertPicture(picture: any) {
+    // selectedPictures = [...selectedPictures, picture];
 
     // Uint8Array
     const contents = await readBinaryFile(picture);
@@ -23,9 +26,13 @@
     const type = picture.split(".").pop();
     const blob = new Blob([contents], { type: type });
 
-    const url = URL.createObjectURL(blob);
+    return URL.createObjectURL(blob);
 
-    pictures = [...pictures, url];
+    // pictures = [...pictures, url];
+  }
+
+  function addPicture(picture: any) {
+    selectedPictures = [...selectedPictures, picture];
   }
 
   /**
@@ -63,51 +70,35 @@
   }
 
   /**
-   * Create the command for the denoiser
-   */
-
- 
-  let args: any[string] = [];
-
-  $: {
-    let cmd: any[string] = [];
-
-    cmd.push("-i");
-
-    selectedPictures.map((url: any) => {
-    cmd.push('"' + url + '"');
-    });
-
-    cmd.push("-o");
-
-    selectedPictures.map((url: any) => {
-      let file_extension = url.split(".").pop();
-      // Removing the file extension from the PATH
-      let filePath = url.slice(0, -(file_extension.length + 1));
-      cmd.push('"' + filePath + "_denoised." + file_extension + '"');
-    });
-
-    args = cmd;
-  }
-
-  /**
    * Handle the denoising
    * Invoke the tauri command
    */
   async function handleDenoise() {
-    invoke("run_denoiser", { args: args })
-      .then((e: any) => {
-        pictures = [];
-        selectedPictures = [];
-        success = true;
-        console.log(e);
-      })
-      .catch((e: any) => {
-        pictures = [];
-        selectedPictures = [];
-        success = false;
-        error = e;
-      });
+    for (let picture of selectedPictures) {
+      loadingDenoiser = true;
+      let cmd: any[string] = [];
+      cmd.push("-i");
+      cmd.push(picture);
+      cmd.push("-o");
+      let file_extension = picture.split(".").pop();
+      // Removing the file extension from the PATH
+      let filePath = picture.slice(0, -(file_extension.length + 1));
+      cmd.push(filePath + "_denoised." + file_extension);
+
+      selectedPictures = selectedPictures.filter((url, i) => i !== 0);
+
+      invoke("run_denoiser", { args: cmd })
+        .then((e: any) => {
+          success = true;
+          msg = e;
+        })
+        .catch((e: any) => {
+          success = false;
+          error = e;
+          loadingDenoiser = false;
+        });
+    }
+    loadingDenoiser = false;
   }
 </script>
 
@@ -125,22 +116,35 @@
 
 <div class="mt-10">
   <div class="grid grid-cols-4 gap-4">
-    {#each pictures as url, i (i)}
-      <div class="flex">
-        <button
-          class="absolute cursor-pointer"
-          on:click={() => deletePicture(i)}
-          ><i class="bi bi-trash-fill text-error text-4xl" /></button
-        >
-        <!-- svelte-ignore a11y-img-redundant-alt -->
-        <img src={url} class="max-w-sm rounded-2xl" alt="chosen image" />
-      </div>
+    {#each selectedPictures as picture, i (i)}
+      {#await convertPicture(picture)}
+      <span class="loading loading-bars loading-lg text-success"></span>
+      {:then url}
+        <div class="flex">
+          <button
+            class="absolute cursor-pointer"
+            on:click={() => deletePicture(i)}
+            ><i class="bi bi-trash-fill text-error text-4xl" /></button
+          >
+          <!-- svelte-ignore a11y-img-redundant-alt -->
+          <img src={url} class="max-w-sm rounded-2xl" alt="chosen image" />
+        </div>
+      {:catch error}
+        <p class="text-error">{error}</p>
+      {/await}
     {/each}
   </div>
 </div>
 
+{#if loadingDenoiser}
+  <div class="flex justify-center mx-auto">
+    <span class="loading loading-dots text-info loading-lg" />
+  </div>
+{/if}
+
 {#if success}
   <h1 class="text-success font-bold flex justify-center">Success</h1>
+  <h1 class="text-white font-bold flex justify-center">{msg}</h1>
 {/if}
 
 {#if error}

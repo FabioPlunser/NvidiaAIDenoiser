@@ -7,7 +7,7 @@ use std::process::Command;
 fn run_denoiser(args: Vec<&str>) -> Result<String, String> {
     println!("Running denoiser with args: {:?}", args);
     // Relative path to the file
-    let relative_path = "denoiser/denoiser.exe";
+    let relative_path = "denoiser\\denoiser";
 
     // Convert the relative path to an absolute path
     let absolute_path = std::env::current_dir()
@@ -18,7 +18,6 @@ fn run_denoiser(args: Vec<&str>) -> Result<String, String> {
     let path_str = absolute_path.to_str().expect("Invalid Unicode in the path");
 
     let mut denoiser = Command::new(path_str);
-
     denoiser.args(args);
 
     let output = denoiser
@@ -28,11 +27,9 @@ fn run_denoiser(args: Vec<&str>) -> Result<String, String> {
 
     if output.status.success() {
         // If the command executed successfully, return the stdout
-        println!("Error executing denoiser command: Stderr:{:?} Stdout:{:?}", &output.stderr, &output.stdout);
         Ok(String::from_utf8_lossy(&output.stdout).to_string())
     } else {
         // If the command failed, return an error message or handle the error as needed
-        println!("Error executing denoiser command: Stderr:{:?} Stdout:{:?}", &output.stderr, &output.stdout);
         Err(format!("Error executing denoiser command: Stderr:{:?} Stdout:{:?}", &output.stderr, &output.stdout))
     }
 }
