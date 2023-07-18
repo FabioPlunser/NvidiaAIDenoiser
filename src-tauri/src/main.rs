@@ -3,31 +3,31 @@
 
 
 use std::process::Command;
+use std::path::Path;
 
 #[tauri::command]
-fn run_denoiser(args: String) -> String {
-    let mut denoiser_cmd = Command::new("./denoiser/denoiser");
-    // Split the arguments string into separate arguments
-    let arguments: Vec<&str> = args.split_whitespace().collect();
-    // Set the arguments for the denoiser command
-    denoiser_cmd.args(&arguments);
+fn run_denoiser() -> Result<String, String> {
+    // Relative path to the file
+    let relative_path = "denoiser\\denoiser";
+    
+    // Convert the relative path to an absolute path
+    let absolute_path = std::env::current_dir().expect("Failed to get current directory")
+        .join(relative_path);
+    
+    // Convert the absolute path to a string
+    let path_str = absolute_path.to_str().expect("Invalid Unicode in the path");
+    
+    let output = Command::new(path_str)
+        .output()
+        .map_err(|e| format!("Failed to execute denoiser: {:?}", e))?;
 
-    // Execute the denoiser command and capture the output
-    let output = denoiser_cmd.output();
-
-    match output {
-        Ok(output) => {
-            if output.status.success() {
-                // If the command executed successfully, return the stdout
-                String::from_utf8_lossy(&output.stdout).to_string()
-            } else {
-                // If the command failed, return an error message or handle the error as needed
-                format!("Error executing denoiser command: {:?}", output.stderr)
-            }
-        }
-        Err(e) => format!("Error executing denoiser command: {:?}", e),
+    if output.status.success() {
+        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    } else {
+        Err(format!("Error executing denoiser: {:?}", output.stderr))
     }
 }
+
 fn main() {
   tauri::Builder::default()
     .invoke_handler(tauri::generate_handler![run_denoiser])
