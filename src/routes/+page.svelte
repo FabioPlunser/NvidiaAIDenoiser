@@ -76,6 +76,7 @@
   async function handleDenoise() {
     for (let picture of selectedPictures) {
       loadingDenoiser = true;
+
       let cmd: any[string] = [];
       cmd.push("-i");
       cmd.push(picture);
@@ -91,6 +92,7 @@
         .then((e: any) => {
           success = true;
           msg = e;
+          loadingDenoiser = false;
         })
         .catch((e: any) => {
           success = false;
@@ -98,7 +100,7 @@
           loadingDenoiser = false;
         });
     }
-    loadingDenoiser = false;
+    
   }
 </script>
 
@@ -144,7 +146,7 @@
 
 {#if success}
   <h1 class="text-success font-bold flex justify-center">Success</h1>
-  <h1 class="text-white font-bold flex justify-center">{msg}</h1>
+  <!-- <h1 class="text-white font-bold flex justify-center">{msg}</h1> -->
 {/if}
 
 {#if error}
