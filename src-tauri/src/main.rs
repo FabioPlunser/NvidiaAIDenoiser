@@ -4,7 +4,7 @@
 use std::process::Command;
 
 #[tauri::command]
-fn run_denoiser(args: Vec<&str>) -> Result<String, String> {
+fn run_denoiser(args: Vec<&str>) -> String {
     println!("Running denoiser with args: {:?}", args);
     // Relative path to the file
     let relative_path = "denoiser\\denoiser";
@@ -23,14 +23,17 @@ fn run_denoiser(args: Vec<&str>) -> Result<String, String> {
     let output = denoiser
         .output()
         .expect("Failed to execute denoiser command");
-       
 
     if output.status.success() {
         // If the command executed successfully, return the stdout
-        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+        String::from_utf8_lossy(&output.stdout).to_string()
     } else {
         // If the command failed, return an error message or handle the error as needed
-        Err(format!("Error executing denoiser command: Stderr:{:?} Stdout:{:?}", &output.stderr, &output.stdout))
+        format!(
+            "Error executing denoiser command: Stderr:{:?} Stdout:{:?}",
+            &output.stderr,
+            &output.stdout
+        )
     }
 }
 

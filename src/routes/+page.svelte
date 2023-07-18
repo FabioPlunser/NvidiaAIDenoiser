@@ -88,7 +88,7 @@
 
       selectedPictures = selectedPictures.filter((url, i) => i !== 0);
 
-      await invoke("run_denoiser", { args: cmd })
+      invoke("run_denoiser", { args: cmd })
         .then((e: any) => {
           success = true;
           msg = e;
