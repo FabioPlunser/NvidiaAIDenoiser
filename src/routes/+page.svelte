@@ -75,7 +75,7 @@
     cmd.push("-i");
 
     selectedPictures.map((url: any) => {
-    cmd.push("'" + url + "'");
+    cmd.push('"' + url + '"');
     });
 
     cmd.push("-o");
@@ -84,7 +84,7 @@
       let file_extension = url.split(".").pop();
       // Removing the file extension from the PATH
       let filePath = url.slice(0, -(file_extension.length + 1));
-      cmd.push("'" + filePath + "_denoised." + file_extension + "'");
+      cmd.push('"' + filePath + "_denoised." + file_extension + '"');
     });
 
     args = cmd;
