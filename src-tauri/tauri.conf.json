@@ -38,7 +38,7 @@
       }
     },
     "bundle": {
-      "active": true,
+      "active": false,
       "category": "DeveloperTool",
       "copyright": "",
       "deb": {
@@ -52,7 +52,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
+      "identifier": "OptixImageDenoiser",
       "longDescription": "",
       "macOS": {
         "entitlements": null,

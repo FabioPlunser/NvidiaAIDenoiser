@@ -3,14 +3,8 @@
   import { writeFile, writeBinaryFile, readBinaryFile, BaseDirectory, copyFile} from '@tauri-apps/api/fs';
   import { invoke  } from '@tauri-apps/api/tauri';
   import { Command } from "@tauri-apps/api/shell";
-
-  let imageUrls: any[] = [];
-  let imageNames: string[] = [];
  
 
-  function deletePicture(pictureId: number){
-    imageUrls = imageUrls.filter((url, i) => i !== pictureId);
-  }
 
   // $: inPictures = "./" + imageNames.join(" ./");
   // $: outPicturs = inPictures.replace(/\.png/g, "_denoised.png");
@@ -22,20 +16,14 @@
 
   let selectedPictures: any = []; 
   let pictures: any[] = []
-  $: inPictures = selectedPictures.map((file: any) => file).join(" ");
-  $: outPicturs = inPictures.replace(/\.png/g, "_denoised.png").replace(/\.jpg/g, "_denoised.jpg");
-  
 
-  async function openFileDialog(){
-    selectedPictures = await open({
-        multiple: true,
-        filters: [{
-          name: 'Image',
-          extensions: ['png', 'jpeg']
-        }]
-      });
 
-    for(let picture of selectedPictures){
+  async function addPicture(picture: any){
+    if(!selectedPictures.includes(picture)){
+      console.log(picture);
+      selectedPictures = [...selectedPictures, picture];
+      console.log("selectedPictures", selectedPictures);
+
       // Uint8Array
       const contents = await readBinaryFile(picture);
       const fileName = picture.split("\\").pop();
@@ -46,10 +34,34 @@
       const url = URL.createObjectURL(blob);
       
       pictures = [...pictures, url];
+    
     }
-    console.log(selectedPictures);
   }
 
+  async function openFileDialog(){
+    const selected = await open({
+        multiple: true,
+        filters: [{
+          name: 'Image',
+          extensions: ['png', 'jpeg']
+        }]
+      });
+
+    if (Array.isArray(selected)) {
+      selected.map((url: any) => addPicture(url));
+    } else if (selected === null) {
+      return;
+    } else {
+      addPicture(selected);
+    }
+  }
+
+  function deletePicture(pictureId: number){
+    pictures = pictures.filter((url, i) => i !== pictureId);
+  }
+
+  $: console.log(pictures);
+  $: console.log(selectedPictures);
 
   function handleDenoise(){
     const result = invoke("run_denoiser");
@@ -73,7 +85,7 @@
         <div class="flex">
           <button class="absolute cursor-pointer" on:click={()=>deletePicture(i)}><i class="bi bi-trash-fill text-error text-4xl"></i></button>
           <!-- svelte-ignore a11y-img-redundant-alt -->
-          <img src="{url}" class="max-w-md rounded-2xl" alt="chosen image" />
+          <img src="{url}" class="max-w-sm rounded-2xl" alt="chosen image" />
         </div>
       {/each}
     </div>
