@@ -1,8 +1,10 @@
 <script lang="ts">
+  // Import necessary modules
   import { open } from "@tauri-apps/api/dialog";
   import { readBinaryFile } from "@tauri-apps/api/fs";
   import { invoke } from "@tauri-apps/api/tauri";
 
+  // Initialize variables
   let selectedPictures: any = [];
   let pictures: any[] = [];
   let error = "";
@@ -11,26 +13,27 @@
   let loadingDenoiser = false;
 
   /**
-   * TODO Put this into a array and await the blob creation int the array to show the picture is loading
    * Add Picture to be shown
    * Read in Uint8Array from tauri and convert it into a blob
    * Add it to the pictures array
    * @param picture
    */
   async function convertPicture(picture: any) {
-    // selectedPictures = [...selectedPictures, picture];
-
-    // Uint8Array
+    // Read the image file as Uint8Array
     const contents = await readBinaryFile(picture);
+
+    // Get the file name and type/extension
     const fileName = picture.split("\\").pop();
     const type = picture.split(".").pop();
+
+    // Create a Blob from the Uint8Array data
     const blob = new Blob([contents], { type: type });
 
+    // Return the URL of the created Blob
     return URL.createObjectURL(blob);
-
-    // pictures = [...pictures, url];
   }
 
+  // Function to add a selected picture to the selectedPictures array
   function addPicture(picture: any) {
     selectedPictures = [...selectedPictures, picture];
   }
@@ -41,6 +44,7 @@
   async function openFileDialog() {
     success = false;
     error = "";
+    // Open a file dialog and allow multiple image selection with specific extensions
     const selected = await open({
       multiple: true,
       filters: [
@@ -51,6 +55,7 @@
       ],
     });
 
+    // Handle the selected images
     if (Array.isArray(selected)) {
       selected.map((url: any) => addPicture(url));
     } else if (selected === null) {
@@ -65,6 +70,7 @@
    * @param pictureId
    */
   function deletePicture(pictureId: number) {
+    // Filter out the specified picture from both selectedPictures and pictures arrays
     pictures = pictures.filter((url, i) => i !== pictureId);
     selectedPictures = selectedPictures.filter((url, i) => i !== pictureId);
   }
@@ -77,6 +83,7 @@
     for (let picture of selectedPictures) {
       loadingDenoiser = true;
 
+      // Prepare the denoising command with input and output file paths
       let cmd: any[string] = [];
       cmd.push("-i");
       cmd.push(picture);
@@ -86,8 +93,10 @@
       let filePath = picture.slice(0, -(file_extension.length + 1));
       cmd.push(filePath + "_denoised." + file_extension);
 
+      // Remove the first picture from the selectedPictures array
       selectedPictures = selectedPictures.filter((url, i) => i !== 0);
 
+      // Invoke the "run_denoiser" command and handle the result
       invoke("run_denoiser", { args: cmd })
         .then((e: any) => {
           success = true;
@@ -100,11 +109,12 @@
           loadingDenoiser = false;
         });
 
-    
+      // Loop will continue to denoise the rest of the images, but only update the last result.
+      // If you want individual denoising updates, you may need to change the code accordingly.
     }
-    
   }
 </script>
+
 
 <h1 class="flex justify-center text-4xl font-bold text-white">
   Optix Image Denoiser
@@ -113,13 +123,13 @@
 <div class="mx-auto flex justify-center mt-4 gap-2">
   <button class="btn btn-primary" on:click={openFileDialog}>Choose Files</button
   >
-  <button class="btn btn-success" on:click={handleDenoise}
+  <button disabled='{selectedPictures.length <= 0}' class="btn btn-success" on:click={handleDenoise}
     >Denoise Selected Pictures</button
   >
 </div>
 
 <div class="mt-10">
-  <div class="grid grid-cols-4 gap-4">
+  <div class="grid grid-rows md:grid-cols-2 xl:grid-cols-4 gap-4">
     {#each selectedPictures as picture, i (i)}
       {#await convertPicture(picture)}
       <span class="loading loading-bars loading-lg text-success"></span>
