@@ -44,7 +44,7 @@
       "deb": {
         "depends": []
       },
-      "externalBin": ["denoiser\\denoiser"],
+      "externalBin": [],
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
@@ -61,7 +61,7 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": [],
+      "resources": ["denoiser/*"],
       "shortDescription": "",
       "targets": "all",
       "windows": {

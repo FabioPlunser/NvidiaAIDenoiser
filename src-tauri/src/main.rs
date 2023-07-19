@@ -26,9 +26,12 @@ fn run_denoiser(args: Vec<&str>) -> String {
 
     if output.status.success() {
         // If the command executed successfully, return the stdout
+        println!("Denoiser command executed successfully: {:?}", &output.stdout);
         String::from_utf8_lossy(&output.stdout).to_string()
     } else {
         // If the command failed, return an error message or handle the error as needed
+        println!("Denoiser command executed successfully: Stderr:{:?} Stdout:{:?}",  &output.stderr,
+        &output.stdout);
         format!(
             "Error executing denoiser command: Stderr:{:?} Stdout:{:?}",
             &output.stderr,
