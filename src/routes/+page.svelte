@@ -11,6 +11,7 @@
   let msg = "";
   let success = false;
   let loadingDenoiser = false;
+  let iterations = 1;
 
   /**
    * Add Picture to be shown
@@ -92,6 +93,7 @@
       // Removing the file extension from the PATH
       let filePath = picture.slice(0, -(file_extension.length + 1));
       cmd.push(filePath + "_denoised." + file_extension);
+      cmd.push("-repeat " + iterations);
 
       // Remove the first picture from the selectedPictures array
       selectedPictures = selectedPictures.filter((url, i) => i !== 0);
@@ -123,6 +125,10 @@
 <div class="mx-auto flex justify-center mt-4 gap-2">
   <button class="btn btn-primary" on:click={openFileDialog}>Choose Files</button
   >
+  <label class="flex my-auto justify-center items-center">
+    <h1 class="font-bold text-lg mr-4">Iterations: </h1>
+    <input class="input input-bordered input-secondary text-white" type="number" placeholder="1" bind:value={iterations} min="1" max="200"/>
+  </label>
   <button disabled='{selectedPictures.length <= 0}' class="btn btn-success" on:click={handleDenoise}
     >Denoise Selected Pictures</button
   >
