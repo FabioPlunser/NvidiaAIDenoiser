@@ -3,7 +3,6 @@
   import { open } from "@tauri-apps/api/dialog";
   import { readBinaryFile } from "@tauri-apps/api/fs";
   import { invoke } from "@tauri-apps/api/tauri";
-
   // Initialize variables
   let selectedPictures: any = [];
   let pictures: any[] = [];
@@ -22,16 +21,17 @@
   async function convertPicture(picture: any) {
     // Read the image file as Uint8Array
     const contents = await readBinaryFile(picture);
+    console.log(contents);
 
     // Get the file name and type/extension
     const fileName = picture.split("\\").pop();
     const type = picture.split(".").pop();
+    
 
     // Create a Blob from the Uint8Array data
     const blob = new Blob([contents], { type: type });
-
-    // Return the URL of the created Blob
     return URL.createObjectURL(blob);
+
   }
 
   // Function to add a selected picture to the selectedPictures array
@@ -51,7 +51,7 @@
       filters: [
         {
           name: "Image",
-          extensions: ["png", "jpg", "jpeg", "svg"],
+          extensions: ["png", "jpg", "jpeg", "svg", "tif", "tiff"],
         },
       ],
     });
@@ -127,7 +127,7 @@
   >
   <label class="flex my-auto justify-center items-center">
     <h1 class="font-bold text-lg mr-4">Iterations: </h1>
-    <input class="input input-bordered input-secondary text-white" type="number" placeholder="1" bind:value={iterations} min="1" max="200"/>
+    <input class="input input-bordered input-secondary text-white" type="number" placeholder="1" bind:value={iterations} min="1"/>
   </label>
   <button disabled='{selectedPictures.length <= 0}' class="btn btn-success" on:click={handleDenoise}
     >Denoise Selected Pictures</button
@@ -147,7 +147,10 @@
             ><i class="bi bi-trash-fill text-error text-4xl" /></button
           >
           <!-- svelte-ignore a11y-img-redundant-alt -->
-          <img src={url} class="max-w-sm rounded-2xl" alt="chosen image" />
+          <div>
+            <img src={url} class="max-w-sm rounded-2xl" alt="chosen image" />
+            <h1>{picture.split("\\").pop()}</h1>
+          </div>
         </div>
       {:catch error}
         <p class="text-error">{error}</p>
